@@ -1,12 +1,12 @@
 ---
-title: "Bob Ross - Joy of Painting-"
+title: "Bob Ross - Joy of Painting"
 author: "Jonathan Bouchet"
 date: "`r Sys.Date()`"
 output: 
 rmarkdown::html_vignette:
 df_print: kable
 vignette: |
-  %\VignetteIndexEntry{Comic gender analysis}
+  %\VignetteIndexEntry{Bob Ross' Joy of Painting}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,7 +17,6 @@ Load required packages to reproduce analysis as well as the dataset.
 
 ```{r, message = FALSE, warning = FALSE}
 library(fivethirtyeight)
-# library(tidyverse)
 library(ggplot2)
 library(dplyr)
 library(tibble)
@@ -193,4 +192,4 @@ ggraph(g1,layout='circle') +
 ```
 
 * larger width indicate the frequency of this correlation
-* the most frequent conenction are `tree | trees`, `tree | lake`, `lake | mountain`, which makes sense as seen with the correlation plot.
+* the most frequent connection are `tree | trees`, `tree | lake`, `lake | mountain`, which makes sense as seen with the correlation plot.

@@ -17,10 +17,11 @@ Load required packages to reproduce analysis.
 
 ```{r, message=FALSE, warning=FALSE}
 library(fivethirtyeight)
-# library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(readr)
 library(tidytext)
+library(textdata)
 library(stringr)
 library(lubridate)
 library(knitr)
@@ -64,14 +65,16 @@ trump_tokens <- trump_twitter %>%
 
 
 # Sentiment analysis
-To measure the sentiment of tweets, we used the AFINN lexicon for each (non-stop) word in a tweet.   The score runs between -5 and 5.  We then sum the scores for each word across all words in one tweet to get a total tweet sentiment score. 
+To measure the sentiment of tweets, we used the AFINN lexicon for each (non-stop) word in a tweet. The score runs between -5 and 5.  We then sum the scores for each word across all words in one tweet to get a total tweet sentiment score. 
 ```{r sentiment}
+afinn_sentiment <- system.file("extdata", "afinn.csv", package = "fivethirtyeight") %>% 
+  read_csv()
 trump_sentiment <- trump_tokens %>% 
-  inner_join(get_sentiments("afinn"), by=c("tokens"="word")) 
+  inner_join(afinn_sentiment, by=c("tokens"="word")) 
 
 trump_full_text_sent <- trump_sentiment %>% 
   group_by(id) %>% 
-  summarise(score = sum(score, na.rm=TRUE)) %>% 
+  summarise(score = sum(value, na.rm=TRUE)) %>% 
   ungroup() %>% 
   right_join(trump_twitter, by="id") %>% 
   mutate(score_factor = ifelse(is.na(score), "Missing score", 
@@ -80,6 +83,7 @@ trump_full_text_sent <- trump_sentiment %>%
 ```
 
 ## Distribution of sentiment scores
+
 ```{r}
 trump_full_text_sent %>%
   count(score_factor) %>% mutate(prop = prop.table(n))
@@ -88,7 +92,8 @@ trump_full_text_sent %>%
 46.4% of tweets did not have sentiment scores.  15.4% were net negative and 36.6% were net positive.
 
 ```{r sentiment_hist, fig.width=7, , warning=FALSE}
-ggplot(data=trump_full_text_sent, aes(score)) + geom_histogram(bins = 10)
+ggplot(data=trump_full_text_sent, aes(score)) + 
+  geom_histogram(bins = 10)
 ```
 
 
@@ -114,6 +119,7 @@ most_pos_trump <- trump_full_text_sent %>%
 
 kable(most_pos_trump, format="html")
 ```
+
 # Examine top 5 most negative tweets
 ```{r, neg_tweets}
 most_neg_trump <- trump_full_text_sent %>% 
@@ -139,9 +145,9 @@ plotSentByTime <- function(trump_tweet_times, timeGroupVar) {
   timeVarLabel <- str_to_title(timeVar)
   
   trump_tweet_time_sent <- trump_tweet_times %>% 
-    rename_(timeGroup = timeVar) %>% 
+    rename(timeGroup = !! timeVar) %>% 
     group_by(timeGroup) %>% 
-    summarise(score = mean(score, na.rm=TRUE),Count = n()) %>% 
+    summarise(score = mean(score, na.rm=TRUE), Count = n()) %>% 
     ungroup()
 
   ggplot(trump_tweet_time_sent, aes(x=timeGroup, y=Count, fill = score)) +
@@ -153,7 +159,7 @@ plotSentByTime <- function(trump_tweet_times, timeGroupVar) {
 
 
 ```{r plot_hour, fig.width=7, warning=FALSE}
-plotSentByTime(trump_tweet_times, hour)
+plotSentByTime(trump_tweet_times, "hour")
 ```
 
 * Trump tweets the least between 4 and 10 am. 
@@ -161,14 +167,14 @@ plotSentByTime(trump_tweet_times, hour)
 
 
 ```{r plot_weekday, fig.width=7, warning=FALSE}
-plotSentByTime(trump_tweet_times, weekday)
+plotSentByTime(trump_tweet_times, "weekday")
 ```
 
 * Trump tweeted the most on Tuesday and Wednesday 
 * Trump was most positive in the second part of the work week (Wed, Thurs, Fri)
 
 ```{r plot_month, fig.width=7, warning=FALSE}
-plotSentByTime(trump_tweet_times, month_over_time)
+plotSentByTime(trump_tweet_times, "month_over_time")
 ```
 
 * In this dataset, the number of tweets decreased after November 2015 and drastically dropped off after March 2016.  It is unclear if this is a result of actual decrease in tweeting frequency or a result of the data collection process.

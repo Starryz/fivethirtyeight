@@ -88,18 +88,23 @@ usethis::use_data(governor_state_forecast, overwrite = TRUE)
 
 
 # house-forecast-2018 ---------------------------------------------------------------
-house_district_forecast <- read_csv("https://projects.fivethirtyeight.com/congress-model-2018/house_district_forecast.csv") %>%
+house_district_forecast <- 
+  "https://projects.fivethirtyeight.com/congress-model-2018/house_district_forecast.csv" %>% 
+  read_csv() %>%
   clean_names() %>%
   mutate(
     state = as.factor(state),
     district = as.factor(district),
-    candidate = as.factor(candidate),
     party = as.factor(party),
-    incumbent = as.logical(incumbent),
     model = as.factor(model)
   ) %>%
-  select(-special)
-house_national_forecast <- read_csv("https://projects.fivethirtyeight.com/congress-model-2018/house_national_forecast.csv") %>%
+  select(-special) %>% 
+  # Given that data frame is large, only include preview of data in package:
+  slice(1:10)
+
+house_national_forecast <- 
+  "https://projects.fivethirtyeight.com/congress-model-2018/house_national_forecast.csv" %>% 
+  read_csv() %>%
   clean_names() %>%
   mutate(
     party = as.factor (party),
@@ -126,7 +131,7 @@ usethis::use_data(mueller_approval_polls, overwrite = TRUE)
 
 
 # ncaa-womens-basketball-tournament ---------------------------------------------------------------
-ncaa_w_basketball_tournaments <- read_csv("data-raw/ncaa-womens-basketball-tournament/ncaa-womens-basketball-tournament-history.csv") %>%
+ncaa_w_bball_tourney <- read_csv("data-raw/ncaa-womens-basketball-tournament/ncaa-womens-basketball-tournament-history.csv") %>%
   clean_names() %>%
   rename(first_home_game = x1st_game_at_home) %>%
   mutate(
@@ -145,18 +150,17 @@ ncaa_w_basketball_tournaments <- read_csv("data-raw/ncaa-womens-basketball-tourn
     full_percent = as.numeric(full_percent),
     first_home_game = as.logical(ifelse(first_home_game == "Y", TRUE, FALSE))
   )
-
-usethis::use_data(ncaa_w_basketball_tournaments, overwrite = TRUE)
+usethis::use_data(ncaa_w_bball_tourney, overwrite = TRUE)
 
 # partisan-lean ---------------------------------------------------------------
 partisan_lean_district <- read_csv("data-raw/partisan-lean/fivethirtyeight_partisan_lean_DISTRICTS.csv") %>% 
   clean_names() %>% 
-  separate(district, c("state", "disctrict_number")) %>% 
+  separate(district, c("state", "district_number")) %>% 
   separate(pvi_538, c("pvi_party", "pvi_amount"))
 partisan_lean_district <- partisan_lean_district %>% 
   mutate(
     state = as.factor(state.name[match(partisan_lean_district$state, state.abb)]), 
-    disctrict_number = as.numeric(disctrict_number), 
+    district_number = as.numeric(district_number), 
     pvi_party = as.factor(pvi_party), 
     pvi_amount = as.numeric(pvi_amount)
   ) 
@@ -176,19 +180,18 @@ usethis::use_data(partisan_lean_state, overwrite = TRUE)
 # political-elasticity-scores ---------------------------------------------------------------
 elasticity_by_district <- read_csv("data-raw/political-elasticity-scores/elasticity-by-district.csv") %>% 
   clean_names() %>% 
-  separate(district, c("state", "disctrict_number")) 
+  separate(district, c("state", "district_number")) 
 elasticity_by_district <- elasticity_by_district %>% 
   mutate(
     state = as.factor(state.name[match(elasticity_by_district$state, state.abb)]), 
-    disctrict_number = as.numeric(disctrict_number)
+    district_number = as.numeric(district_number)
   ) 
 usethis::use_data(elasticity_by_district, overwrite = TRUE)
 
 elasticity_by_state <- read_csv("data-raw/political-elasticity-scores/elasticity-by-state.csv") %>% 
   clean_names() %>% 
-  mutate(
-    state = as.factor(state.name[match(elasticity_by_state$state, state.abb)]), 
-  )
+  left_join(state_info, by = c("state" = "state_abbrev")) %>% 
+  select(state, state_name = state.y, elasticity)
 usethis::use_data(elasticity_by_state, overwrite = TRUE)
 
 # russia-investigation ---------------------------------------------------------------
